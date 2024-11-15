@@ -1,0 +1,665 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "1257dfc0",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-11-15T07:57:33.693621Z",
+     "iopub.status.busy": "2024-11-15T07:57:33.693090Z",
+     "iopub.status.idle": "2024-11-15T07:57:36.331592Z",
+     "shell.execute_reply": "2024-11-15T07:57:36.330380Z"
+    },
+    "papermill": {
+     "duration": 2.647255,
+     "end_time": "2024-11-15T07:57:36.334149",
+     "exception": false,
+     "start_time": "2024-11-15T07:57:33.686894",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "import numpy as np \n",
+    "import pandas as pd\n",
+    "import os\n",
+    "import matplotlib.pyplot as plt\n",
+    "from sklearn.model_selection import train_test_split , cross_val_score\n",
+    "from sklearn.preprocessing import StandardScaler , OneHotEncoder , OrdinalEncoder , LabelEncoder\n",
+    "from sklearn.pipeline import Pipeline , make_pipeline\n",
+    "from sklearn.compose import ColumnTransformer ,make_column_transformer\n",
+    "from sklearn.impute import SimpleImputer\n",
+    "from sklearn.model_selection import cross_val_score\n",
+    "from sklearn.metrics import accuracy_score\n",
+    "\n",
+    "from sklearn.linear_model import LogisticRegression\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "7e44ab90",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-11-15T07:57:36.343518Z",
+     "iopub.status.busy": "2024-11-15T07:57:36.342955Z",
+     "iopub.status.idle": "2024-11-15T07:57:37.314178Z",
+     "shell.execute_reply": "2024-11-15T07:57:37.312951Z"
+    },
+    "papermill": {
+     "duration": 0.978963,
+     "end_time": "2024-11-15T07:57:37.317072",
+     "exception": false,
+     "start_time": "2024-11-15T07:57:36.338109",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>id</th>\n",
+       "      <th>Name</th>\n",
+       "      <th>Gender</th>\n",
+       "      <th>Age</th>\n",
+       "      <th>City</th>\n",
+       "      <th>Working Professional or Student</th>\n",
+       "      <th>Profession</th>\n",
+       "      <th>Academic Pressure</th>\n",
+       "      <th>Work Pressure</th>\n",
+       "      <th>CGPA</th>\n",
+       "      <th>Study Satisfaction</th>\n",
+       "      <th>Job Satisfaction</th>\n",
+       "      <th>Sleep Duration</th>\n",
+       "      <th>Dietary Habits</th>\n",
+       "      <th>Degree</th>\n",
+       "      <th>Have you ever had suicidal thoughts ?</th>\n",
+       "      <th>Work/Study Hours</th>\n",
+       "      <th>Financial Stress</th>\n",
+       "      <th>Family History of Mental Illness</th>\n",
+       "      <th>Depression</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>0</td>\n",
+       "      <td>Aaradhya</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>49.0</td>\n",
+       "      <td>Ludhiana</td>\n",
+       "      <td>Working Professional</td>\n",
+       "      <td>Chef</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>More than 8 hours</td>\n",
+       "      <td>Healthy</td>\n",
+       "      <td>BHM</td>\n",
+       "      <td>No</td>\n",
+       "      <td>1.0</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>No</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>1</td>\n",
+       "      <td>Vivan</td>\n",
+       "      <td>Male</td>\n",
+       "      <td>26.0</td>\n",
+       "      <td>Varanasi</td>\n",
+       "      <td>Working Professional</td>\n",
+       "      <td>Teacher</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>4.0</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>Less than 5 hours</td>\n",
+       "      <td>Unhealthy</td>\n",
+       "      <td>LLB</td>\n",
+       "      <td>Yes</td>\n",
+       "      <td>7.0</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>No</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>2</td>\n",
+       "      <td>Yuvraj</td>\n",
+       "      <td>Male</td>\n",
+       "      <td>33.0</td>\n",
+       "      <td>Visakhapatnam</td>\n",
+       "      <td>Student</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>8.97</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>5-6 hours</td>\n",
+       "      <td>Healthy</td>\n",
+       "      <td>B.Pharm</td>\n",
+       "      <td>Yes</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>1.0</td>\n",
+       "      <td>No</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>3</td>\n",
+       "      <td>Yuvraj</td>\n",
+       "      <td>Male</td>\n",
+       "      <td>22.0</td>\n",
+       "      <td>Mumbai</td>\n",
+       "      <td>Working Professional</td>\n",
+       "      <td>Teacher</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>1.0</td>\n",
+       "      <td>Less than 5 hours</td>\n",
+       "      <td>Moderate</td>\n",
+       "      <td>BBA</td>\n",
+       "      <td>Yes</td>\n",
+       "      <td>10.0</td>\n",
+       "      <td>1.0</td>\n",
+       "      <td>Yes</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>4</td>\n",
+       "      <td>Rhea</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>30.0</td>\n",
+       "      <td>Kanpur</td>\n",
+       "      <td>Working Professional</td>\n",
+       "      <td>Business Analyst</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>1.0</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>1.0</td>\n",
+       "      <td>5-6 hours</td>\n",
+       "      <td>Unhealthy</td>\n",
+       "      <td>BBA</td>\n",
+       "      <td>Yes</td>\n",
+       "      <td>9.0</td>\n",
+       "      <td>4.0</td>\n",
+       "      <td>Yes</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   id      Name  Gender   Age           City Working Professional or Student  \\\n",
+       "0   0  Aaradhya  Female  49.0       Ludhiana            Working Professional   \n",
+       "1   1     Vivan    Male  26.0       Varanasi            Working Professional   \n",
+       "2   2    Yuvraj    Male  33.0  Visakhapatnam                         Student   \n",
+       "3   3    Yuvraj    Male  22.0         Mumbai            Working Professional   \n",
+       "4   4      Rhea  Female  30.0         Kanpur            Working Professional   \n",
+       "\n",
+       "         Profession  Academic Pressure  Work Pressure  CGPA  \\\n",
+       "0              Chef                NaN            5.0   NaN   \n",
+       "1           Teacher                NaN            4.0   NaN   \n",
+       "2               NaN                5.0            NaN  8.97   \n",
+       "3           Teacher                NaN            5.0   NaN   \n",
+       "4  Business Analyst                NaN            1.0   NaN   \n",
+       "\n",
+       "   Study Satisfaction  Job Satisfaction     Sleep Duration Dietary Habits  \\\n",
+       "0                 NaN               2.0  More than 8 hours        Healthy   \n",
+       "1                 NaN               3.0  Less than 5 hours      Unhealthy   \n",
+       "2                 2.0               NaN          5-6 hours        Healthy   \n",
+       "3                 NaN               1.0  Less than 5 hours       Moderate   \n",
+       "4                 NaN               1.0          5-6 hours      Unhealthy   \n",
+       "\n",
+       "    Degree Have you ever had suicidal thoughts ?  Work/Study Hours  \\\n",
+       "0      BHM                                    No               1.0   \n",
+       "1      LLB                                   Yes               7.0   \n",
+       "2  B.Pharm                                   Yes               3.0   \n",
+       "3      BBA                                   Yes              10.0   \n",
+       "4      BBA                                   Yes               9.0   \n",
+       "\n",
+       "   Financial Stress Family History of Mental Illness  Depression  \n",
+       "0               2.0                               No           0  \n",
+       "1               3.0                               No           1  \n",
+       "2               1.0                               No           1  \n",
+       "3               1.0                              Yes           1  \n",
+       "4               4.0                              Yes           0  "
+      ]
+     },
+     "execution_count": 2,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "path_ = '/kaggle/input/playground-series-s4e11'\n",
+    "train_data = pd.read_csv(os.path.join(path_ , 'train.csv')   )\n",
+    "test_data = pd.read_csv(os.path.join(path_,'test.csv'))\n",
+    "test_id = test_data['id']\n",
+    "train_data.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "338c0378",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-11-15T07:57:37.327109Z",
+     "iopub.status.busy": "2024-11-15T07:57:37.326640Z",
+     "iopub.status.idle": "2024-11-15T07:57:37.332275Z",
+     "shell.execute_reply": "2024-11-15T07:57:37.331093Z"
+    },
+    "papermill": {
+     "duration": 0.013543,
+     "end_time": "2024-11-15T07:57:37.334938",
+     "exception": false,
+     "start_time": "2024-11-15T07:57:37.321395",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "(140700, 20)\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(train_data.shape)\n",
+    "# train_data.isnull().sum()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "c28bc1e3",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-11-15T07:57:37.344703Z",
+     "iopub.status.busy": "2024-11-15T07:57:37.344286Z",
+     "iopub.status.idle": "2024-11-15T07:57:37.379001Z",
+     "shell.execute_reply": "2024-11-15T07:57:37.377681Z"
+    },
+    "papermill": {
+     "duration": 0.04294,
+     "end_time": "2024-11-15T07:57:37.381936",
+     "exception": false,
+     "start_time": "2024-11-15T07:57:37.338996",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "null_cols = ['Academic Pressure' , 'CGPA' , 'Study Satisfaction' ,'Profession' ,'Work Pressure' , 'Job Satisfaction' ,'id'] #Columns with high Null Values\n",
+    "train_data.drop(null_cols ,axis='columns',inplace=True)\n",
+    "test_data.drop(null_cols ,axis='columns',inplace=True)\n",
+    "# train_data.sample(10)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "f1ea56fb",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-11-15T07:57:37.392073Z",
+     "iopub.status.busy": "2024-11-15T07:57:37.391649Z",
+     "iopub.status.idle": "2024-11-15T07:57:37.408413Z",
+     "shell.execute_reply": "2024-11-15T07:57:37.407427Z"
+    },
+    "papermill": {
+     "duration": 0.025165,
+     "end_time": "2024-11-15T07:57:37.411365",
+     "exception": false,
+     "start_time": "2024-11-15T07:57:37.386200",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "X = train_data.iloc[:,:-1]\n",
+    "y = train_data.iloc[:,-1]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "9940a98b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-11-15T07:57:37.421237Z",
+     "iopub.status.busy": "2024-11-15T07:57:37.420810Z",
+     "iopub.status.idle": "2024-11-15T07:57:37.502855Z",
+     "shell.execute_reply": "2024-11-15T07:57:37.501578Z"
+    },
+    "papermill": {
+     "duration": 0.089899,
+     "end_time": "2024-11-15T07:57:37.505424",
+     "exception": false,
+     "start_time": "2024-11-15T07:57:37.415525",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Name                                      object\n",
+      "Gender                                    object\n",
+      "Age                                      float64\n",
+      "City                                      object\n",
+      "Working Professional or Student           object\n",
+      "Sleep Duration                            object\n",
+      "Dietary Habits                            object\n",
+      "Degree                                    object\n",
+      "Have you ever had suicidal thoughts ?     object\n",
+      "Work/Study Hours                         float64\n",
+      "Financial Stress                         float64\n",
+      "Family History of Mental Illness          object\n",
+      "dtype: object\n",
+      "0 : Name\n",
+      "1 : Gender\n",
+      "2 : Age\n",
+      "3 : City\n",
+      "4 : Working Professional or Student\n",
+      "5 : Sleep Duration\n",
+      "6 : Dietary Habits\n",
+      "7 : Degree\n",
+      "8 : Have you ever had suicidal thoughts ?\n",
+      "9 : Work/Study Hours\n",
+      "10 : Financial Stress\n",
+      "11 : Family History of Mental Illness\n"
+     ]
+    }
+   ],
+   "source": [
+    "X_train , X_test , y_train ,y_test = train_test_split(X,y,random_state=42, test_size=0.2 ,shuffle=True)\n",
+    "print(X_train.dtypes)\n",
+    "\n",
+    "# Add this line to make sure X_train and X_test are still DataFrames if needed:\n",
+    "for i in range(len(X_train.columns)):\n",
+    "    print(f'{i} : {X_train.columns[i]}')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "a1935802",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-11-15T07:57:37.515568Z",
+     "iopub.status.busy": "2024-11-15T07:57:37.515110Z",
+     "iopub.status.idle": "2024-11-15T07:57:37.522776Z",
+     "shell.execute_reply": "2024-11-15T07:57:37.521519Z"
+    },
+    "papermill": {
+     "duration": 0.015466,
+     "end_time": "2024-11-15T07:57:37.525054",
+     "exception": false,
+     "start_time": "2024-11-15T07:57:37.509588",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Define the column names for each transformation\n",
+    "categorical_columns = ['Gender', 'Working Professional or Student', 'Dietary Habits', \n",
+    "                       'Degree', 'Have you ever had suicidal thoughts ?', 'Family History of Mental Illness']\n",
+    "numerical_columns = ['Age', 'Work/Study Hours', 'Financial Stress']\n",
+    "\n",
+    "# Define the transformers\n",
+    "categorical_transformer = Pipeline(steps=[\n",
+    "    ('imputer', SimpleImputer(strategy='most_frequent')),  # Handling missing values\n",
+    "    ('onehot', OneHotEncoder(handle_unknown='ignore'))     # OneHotEncoding categorical columns\n",
+    "])\n",
+    "\n",
+    "numerical_transformer = Pipeline(steps=[\n",
+    "    ('imputer', SimpleImputer(strategy='mean')),           # Handling missing values\n",
+    "    ('scaler', StandardScaler())                           # Scaling numerical features\n",
+    "])\n",
+    "\n",
+    "# Create the column transformer\n",
+    "preprocessor = ColumnTransformer(\n",
+    "    transformers=[\n",
+    "        ('cat', categorical_transformer, categorical_columns),\n",
+    "        ('num', numerical_transformer, numerical_columns)\n",
+    "    ])\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "15df7a9a",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-11-15T07:57:37.535518Z",
+     "iopub.status.busy": "2024-11-15T07:57:37.535073Z",
+     "iopub.status.idle": "2024-11-15T07:57:37.540193Z",
+     "shell.execute_reply": "2024-11-15T07:57:37.539124Z"
+    },
+    "papermill": {
+     "duration": 0.013082,
+     "end_time": "2024-11-15T07:57:37.542563",
+     "exception": false,
+     "start_time": "2024-11-15T07:57:37.529481",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# List of classifiers\n",
+    "classifiers = [\n",
+    "    ('Logistic Regression', LogisticRegression(max_iter=200)),\n",
+    "]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "a38b893a",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-11-15T07:57:37.552888Z",
+     "iopub.status.busy": "2024-11-15T07:57:37.552446Z",
+     "iopub.status.idle": "2024-11-15T07:57:40.210659Z",
+     "shell.execute_reply": "2024-11-15T07:57:40.209546Z"
+    },
+    "papermill": {
+     "duration": 2.667533,
+     "end_time": "2024-11-15T07:57:40.214439",
+     "exception": false,
+     "start_time": "2024-11-15T07:57:37.546906",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Logistic Regression 0.9215351812366738\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/opt/conda/lib/python3.10/site-packages/sklearn/linear_model/_logistic.py:458: ConvergenceWarning: lbfgs failed to converge (status=1):\n",
+      "STOP: TOTAL NO. of ITERATIONS REACHED LIMIT.\n",
+      "\n",
+      "Increase the number of iterations (max_iter) or scale the data as shown in:\n",
+      "    https://scikit-learn.org/stable/modules/preprocessing.html\n",
+      "Please also refer to the documentation for alternative solver options:\n",
+      "    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression\n",
+      "  n_iter_i = _check_optimize_result(\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Iterate through each classifier, create a pipeline, train, and evaluate\n",
+    "for name, clf in classifiers:\n",
+    "    pipeline = Pipeline([\n",
+    "        ('preprocessor', preprocessor),\n",
+    "        ('classifier', clf)\n",
+    "    ])\n",
+    "    \n",
+    "    pipeline.fit(X_train,y_train)\n",
+    "    y_pred = pipeline.predict(X_test)\n",
+    "    print(f'{name} { accuracy_score(y_test , y_pred )}')    \n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "47b6fc1b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-11-15T07:57:40.224694Z",
+     "iopub.status.busy": "2024-11-15T07:57:40.224298Z",
+     "iopub.status.idle": "2024-11-15T07:57:40.557679Z",
+     "shell.execute_reply": "2024-11-15T07:57:40.556423Z"
+    },
+    "papermill": {
+     "duration": 0.341755,
+     "end_time": "2024-11-15T07:57:40.560458",
+     "exception": false,
+     "start_time": "2024-11-15T07:57:40.218703",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "submission_df = pd.DataFrame({'id':test_id ,'Depression':pipeline.predict(test_data) })\n",
+    "submission_df.to_csv('submission.csv', index=False)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "028ff664",
+   "metadata": {
+    "papermill": {
+     "duration": 0.005103,
+     "end_time": "2024-11-15T07:57:40.570035",
+     "exception": false,
+     "start_time": "2024-11-15T07:57:40.564932",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "59df7317",
+   "metadata": {
+    "papermill": {
+     "duration": 0.004084,
+     "end_time": "2024-11-15T07:57:40.578768",
+     "exception": false,
+     "start_time": "2024-11-15T07:57:40.574684",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kaggle": {
+   "accelerator": "none",
+   "dataSources": [
+    {
+     "databundleVersionId": 10008389,
+     "sourceId": 84895,
+     "sourceType": "competition"
+    }
+   ],
+   "dockerImageVersionId": 30786,
+   "isGpuEnabled": false,
+   "isInternetEnabled": true,
+   "language": "python",
+   "sourceType": "notebook"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.14"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 10.392925,
+   "end_time": "2024-11-15T07:57:41.204478",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "__notebook__.ipynb",
+   "output_path": "__notebook__.ipynb",
+   "parameters": {},
+   "start_time": "2024-11-15T07:57:30.811553",
+   "version": "2.6.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
